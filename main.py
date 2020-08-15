@@ -1,51 +1,90 @@
 import json
 import os
 import requests
+from dotenv import load_dotenv
+
+def predict_rub_salary_hh(job_info):
+    salary_info = job_info['salary']
+    if salary_info["currency"] != 'RUR':
+        return
+    elif salary_info['from'] == None:
+        return salary_info['to']*0.8
+    elif salary_info['to'] == None:
+        return salary_info['from']*1.2
+    else:
+        return (salary_info['from'] + salary_info['to']) // 2
 
 
-def predict_rub_salary(job_info):
-        salary_info = job_info['salary']
-        if salary_info["currency"] != 'RUR':
-            return
-        elif salary_info['from'] == None:
-            return salary_info['to']*0.8
-        elif salary_info['to'] == None:
-            return salary_info['from']*1.2
-        else:
-            return (salary_info['from'] + salary_info['to']) // 2
+def predict_rub_salary(vacancy):
+    if ((not vacancy["payment_from"] and not vacancy["payment_to"])
+     or vacancy["currency"] != 'rub'):
+        return
+    elif vacancy['payment_from'] == None:
+        return vacancy['payment_to']*0.8
+    elif vacancy['payment_to'] == None:
+        return vacancy['payment_from']*1.2
+    else:
+        return (vacancy['payment_from'] + vacancy['payment_to']) // 2
+
+
+def hh_get_salarys(hh_payload):
+    last_page = page_response.json()['pages']
+    salarys = []
+    for page_hh in range(last_page + 1):
+        hh_payload['page'] = page_hh
+        response = requests.get(url_hh, params=hh_payload)
+        for job_info in response.json()['items']:
+            salary = predict_rub_salary_hh(job_info)
+            if salary:
+                salarys.append(int(salary))
+    return salarys
+
+
+def sj_get_salarys(sj_payload):
+    page = 0
+    salarys = []
+    while True:
+        sj_payload['page'] = page
+        sj_response = requests.get(sj_url, headers=AUTH_TOKEN, params=sj_payload)
+        for vacancy in sj_response.json()['objects']:
+            salary = predict_rub_salary(vacancy)
+            if salary:
+                salarys.append(int(salary))
+            page += 1
+        if not sj_response.json()['more']:
+            break
+    return salarys
+
 
 if __name__ == "__main__":
-    
+    sj_url = "https://api.superjob.ru/2.0/vacancies/"
     url_hh = "https://api.hh.ru/vacancies"
-
-    payload = {
+    load_dotenv()
+    sj_token = os.getenv("SJ_TOKEN")
+    AUTH_TOKEN = {'X-Api-App-Id': sj_token,}
+    sj_payload = {'town': 4, 'count':100}
+    hh_payload = {
         "period": 30, 
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
     result = {}
-
     languages = ['Python','Java','Javascript','Ruby','PHP','C++','C#','C','Go']
     for language in languages:
+        sj_payload['keyword'] = f"{language} Разработчик"
+        sj_response = requests.get(sj_url, headers=AUTH_TOKEN, params=sj_payload)
         salarys = []
         result[language] = {}
-        payload['text'] = f"{language} Разработчик"
-        page_response = requests.get(url_hh, params=payload)
-        result[language]['vacancies_found'] = page_response.json()['found']
-        last_page = page_response.json()['pages']
-        for page in range(last_page + 1):
-            payload['page'] = page
-            response = requests.get(url_hh, params=payload)
-            for job_info in response.json()['items']:
-                salary = predict_rub_salary(job_info)
-                if salary:
-                    print(salary)
-                    salarys.append(salary)
-        result[language]['average_salary'] = int(sum(salarys)/len(salarys))
+        hh_payload['text'] = f"{language} Разработчик"
+        page_response = requests.get(url_hh, params=hh_payload)
+        result[language]['vacancies_found'] = page_response.json()['found'] + sj_response.json()['total']
+        sj_salarys = sj_get_salarys(sj_payload)
+        hh_salarys = hh_get_salarys(page_response, hh_payload)
+        salarys = sj_salarys + hh_salarys
+        if len(salarys) != 0:
+            result[language]['average_salary'] = int(sum(salarys)/len(salarys))
         result[language]['vacancies_processed'] = len(salarys)
     print(result)
-json_path = 'example.json'
+    json_path = 'example.json'
 
-with open(json_path, "w", encoding='utf-8') as my_file:
-        json.dump(result, my_file, indent=4, ensure_ascii=False)
 
