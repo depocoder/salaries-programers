@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 
 
@@ -44,6 +45,7 @@ if __name__ == "__main__":
         result[language]['vacancies_processed'] = len(salarys)
     print(result)
 json_path = 'example.json'
+
 with open(json_path, "w", encoding='utf-8') as my_file:
         json.dump(result, my_file, indent=4, ensure_ascii=False)
 
