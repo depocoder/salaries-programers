@@ -95,10 +95,10 @@ if __name__ == "__main__":
                         по которым хотите узнать среднюю зарплату''')
     parser.add_argument(
         '--skip_hh', action="store_false",
-        help='Не делать таблицу hh')
+        help='Не делать таблицу hh.')
     parser.add_argument(
         '--skip_sj', action="store_false",
-        help='Не делать таблицу sj')
+        help='Не делать таблицу sj.')
 
     args = parser.parse_args()
     languages = ['Python', 'Java', 'Javascript',
