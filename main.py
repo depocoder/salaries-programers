@@ -65,7 +65,8 @@ def get_salarys_sj(sj_payload):
         for vacancy in sj_response.json()['objects']:
             salary = predict_rub_salary_sj(vacancy)
             if salary:
-                salarys.append(int(salary))
+                if salary > 8000:
+                    salarys.append(int(salary))
             page += 1
         if not sj_response.json()['more']:
             break
@@ -73,6 +74,7 @@ def get_salarys_sj(sj_payload):
 
 
 def create_result(language, total_vacancies, salarys, dict):
+    dict[language] = {}
     dict[language]['vacancies_found'] = total_vacancies
     if len(salarys) != 0:
         dict[language]['average_salary'] = int(sum(salarys)/len(salarys))
