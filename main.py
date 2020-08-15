@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+from terminaltables import AsciiTable
 from dotenv import load_dotenv
 
 def predict_rub_salary_hh(job_info):
@@ -28,7 +29,7 @@ def predict_rub_salary(vacancy):
 
 
 def hh_get_salarys(hh_payload):
-    last_page = page_response.json()['pages']
+    last_page = hh_response.json()['pages']
     salarys = []
     for page_hh in range(last_page + 1):
         hh_payload['page'] = page_hh
@@ -38,6 +39,20 @@ def hh_get_salarys(hh_payload):
             if salary:
                 salarys.append(int(salary))
     return salarys
+
+
+def create_table(result, languages):
+    table_data = [
+    ['Язык программирования', 'Вакансий найдено',
+     'Вакансий обработано', 'Средняя зарплата']]
+    for language in languages:
+        vacancies_found = result[language]['vacancies_found']
+        vacancies_processed = result[language]['vacancies_processed']
+        average_salary = result[language]['average_salary']
+        language_info = [language, vacancies_found, vacancies_processed, average_salary]
+        table_data.append(language_info)
+    table = AsciiTable(table_data)
+    return table
 
 
 def sj_get_salarys(sj_payload):
@@ -76,15 +91,15 @@ if __name__ == "__main__":
         salarys = []
         result[language] = {}
         hh_payload['text'] = f"{language} Разработчик"
-        page_response = requests.get(url_hh, params=hh_payload)
-        result[language]['vacancies_found'] = page_response.json()['found'] + sj_response.json()['total']
+        hh_response = requests.get(url_hh, params=hh_payload)
+        result[language]['vacancies_found'] = hh_response.json()['found'] + sj_response.json()['total']
         sj_salarys = sj_get_salarys(sj_payload)
-        hh_salarys = hh_get_salarys(page_response, hh_payload)
+        hh_salarys = hh_get_salarys(hh_payload)
         salarys = sj_salarys + hh_salarys
         if len(salarys) != 0:
             result[language]['average_salary'] = int(sum(salarys)/len(salarys))
         result[language]['vacancies_processed'] = len(salarys)
-    print(result)
-    json_path = 'example.json'
+    table = create_table(result, languages)
+    print(table.table)
 
 
