@@ -16,7 +16,7 @@ def predict_rub_salary_hh(job_info):
         return (salary_info['from'] + salary_info['to']) // 2
 
 
-def predict_rub_salary(vacancy):
+def predict_rub_salary_sj(vacancy):
     if ((not vacancy["payment_from"] and not vacancy["payment_to"])
        or vacancy["currency"] != 'rub'):
         return
@@ -28,7 +28,7 @@ def predict_rub_salary(vacancy):
         return (vacancy['payment_from'] + vacancy['payment_to']) // 2
 
 
-def hh_get_salarys(hh_payload):
+def get_salarys_hh(hh_payload):
     last_page = hh_response.json()['pages']
     salarys = []
     for page_hh in range(last_page + 1):
@@ -55,7 +55,7 @@ def create_table(result, languages, title):
     return table
 
 
-def sj_get_salarys(sj_payload):
+def get_salarys_sj(sj_payload):
     page = 0
     salarys = []
     while True:
@@ -63,7 +63,7 @@ def sj_get_salarys(sj_payload):
         sj_response = requests.get(
             sj_url, headers=AUTH_TOKEN, params=sj_payload)
         for vacancy in sj_response.json()['objects']:
-            salary = predict_rub_salary(vacancy)
+            salary = predict_rub_salary_sj(vacancy)
             if salary:
                 salarys.append(int(salary))
             page += 1
@@ -105,8 +105,8 @@ if __name__ == "__main__":
         salarys = []
         hh_payload['text'] = f"{language} Разработчик"
         hh_response = requests.get(url_hh, params=hh_payload)
-        hh_salarys = hh_get_salarys(hh_payload)
-        sj_salarys = sj_get_salarys(sj_payload)
+        hh_salarys = get_salarys_hh(hh_payload)
+        sj_salarys = get_salarys_sj(sj_payload)
         hh_total_vacancies = hh_response.json()['found']
         sj_total_vacancies = sj_response.json()['total']
         sj_info_salarys = create_result(
