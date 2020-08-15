@@ -1,4 +1,5 @@
 import os
+import argparse
 import requests
 from terminaltables import AsciiTable
 from dotenv import load_dotenv
@@ -85,6 +86,18 @@ def create_result(language, total_vacancies, salarys, dict):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description='''Этот проект позволяет узнать среднюю зарплату
+        программистов в Москве через API: HeadHunter и SuperJob.''')
+    parser.add_argument('prog_language', metavar='N', type=str, nargs='*',
+                    default=['PHP'],
+                    help='''Введите языки программирования
+                    по которым хотите узнать среднюю зарплату''')
+
+    args = parser.parse_args()
+    languages = ['Python', 'Java', 'Javascript',
+                 'Ruby', 'C++', 'C#', 'C', 'Go']
+    languages += args.prog_language
     sj_url = "https://api.superjob.ru/2.0/vacancies/"
     url_hh = "https://api.hh.ru/vacancies"
     load_dotenv()
@@ -96,8 +109,6 @@ if __name__ == "__main__":
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
-    languages = ['Python', 'Java', 'Javascript',
-                 'Ruby', 'PHP', 'C++', 'C#', 'C', 'Go']
     sj_dict = {}
     hh_dict = {}
     for language in languages:
