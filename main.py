@@ -41,7 +41,7 @@ def hh_get_salarys(hh_payload):
     return salarys
 
 
-def create_table(result, languages):
+def create_table(result, languages, title):
     table_data = [
     ['Язык программирования', 'Вакансий найдено',
      'Вакансий обработано', 'Средняя зарплата']]
@@ -51,7 +51,7 @@ def create_table(result, languages):
         average_salary = result[language]['average_salary']
         language_info = [language, vacancies_found, vacancies_processed, average_salary]
         table_data.append(language_info)
-    table = AsciiTable(table_data)
+    table = AsciiTable(table_data, title)
     return table
 
 
@@ -71,6 +71,16 @@ def sj_get_salarys(sj_payload):
     return salarys
 
 
+def create_result(language, total_vacancies, salarys, dict):
+    dict[language]['vacancies_found'] = total_vacancies
+    if len(salarys) !=0:
+        dict[language]['average_salary'] = int(sum(salarys)/len(salarys))
+    else:
+        dict[language]['average_salary'] = 0
+    dict[language]['vacancies_processed'] = len(salarys)
+    return dict
+
+
 if __name__ == "__main__":
     sj_url = "https://api.superjob.ru/2.0/vacancies/"
     url_hh = "https://api.hh.ru/vacancies"
@@ -83,23 +93,24 @@ if __name__ == "__main__":
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
-    result = {}
     languages = ['Python','Java','Javascript','Ruby','PHP','C++','C#','C','Go']
+    sj_dict = {}
+    hh_dict = {}
     for language in languages:
         sj_payload['keyword'] = f"{language} Разработчик"
         sj_response = requests.get(sj_url, headers=AUTH_TOKEN, params=sj_payload)
         salarys = []
-        result[language] = {}
         hh_payload['text'] = f"{language} Разработчик"
         hh_response = requests.get(url_hh, params=hh_payload)
-        result[language]['vacancies_found'] = hh_response.json()['found'] + sj_response.json()['total']
-        sj_salarys = sj_get_salarys(sj_payload)
         hh_salarys = hh_get_salarys(hh_payload)
-        salarys = sj_salarys + hh_salarys
-        if len(salarys) != 0:
-            result[language]['average_salary'] = int(sum(salarys)/len(salarys))
-        result[language]['vacancies_processed'] = len(salarys)
-    table = create_table(result, languages)
-    print(table.table)
+        sj_salarys = sj_get_salarys(sj_payload)
+        hh_total_vacancies = hh_response.json()['found']
+        sj_total_vacancies = sj_response.json()['total']
+        sj_info_salarys = create_result(language, sj_total_vacancies, sj_salarys, sj_dict)
+        hh_info_salarys = create_result(language, hh_total_vacancies, hh_salarys, hh_dict)
+    hh_table = create_table(hh_info_salarys, languages, 'headhunter Moscow')
+    sj_table = create_table(sj_info_salarys, languages, 'superjob Moscow')
+    print(hh_table.table)
+    print(sj_table.table)
 
 
