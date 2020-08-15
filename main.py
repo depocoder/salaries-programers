@@ -90,9 +90,9 @@ if __name__ == "__main__":
         description='''Этот проект позволяет узнать среднюю зарплату
         программистов в Москве через API: HeadHunter и SuperJob.''')
     parser.add_argument('prog_language', metavar='N', type=str, nargs='*',
-                    default=['PHP'],
-                    help='''Введите языки программирования
-                    по которым хотите узнать среднюю зарплату''')
+                        default=['PHP'],
+                        help='''Введите языки программирования
+                        по которым хотите узнать среднюю зарплату''')
 
     args = parser.parse_args()
     languages = ['Python', 'Java', 'Javascript',
