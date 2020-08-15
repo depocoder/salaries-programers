@@ -93,6 +93,12 @@ if __name__ == "__main__":
                         default=['PHP'],
                         help='''Введите языки программирования
                         по которым хотите узнать среднюю зарплату''')
+    parser.add_argument(
+        '--skip_hh', action="store_false",
+        help='Не делать таблицу hh')
+    parser.add_argument(
+        '--skip_sj', action="store_false",
+        help='Не делать таблицу sj')
 
     args = parser.parse_args()
     languages = ['Python', 'Java', 'Javascript',
@@ -112,21 +118,24 @@ if __name__ == "__main__":
     sj_dict = {}
     hh_dict = {}
     for language in languages:
-        sj_payload['keyword'] = f"{language} Разработчик"
-        sj_response = requests.get(
+        if args.skip_hh:
+            hh_payload['text'] = f"{language} Разработчик"
+            hh_response = requests.get(url_hh, params=hh_payload)
+            hh_salarys = get_salarys_hh(hh_payload)
+            hh_total_vacancies = hh_response.json()['found']
+            hh_info_salarys = create_result(
+                language, hh_total_vacancies, hh_salarys, hh_dict)
+        if args.skip_sj:
+            sj_payload['keyword'] = f"{language} Разработчик"
+            sj_response = requests.get(
             sj_url, headers=AUTH_TOKEN, params=sj_payload)
-        salarys = []
-        hh_payload['text'] = f"{language} Разработчик"
-        hh_response = requests.get(url_hh, params=hh_payload)
-        hh_salarys = get_salarys_hh(hh_payload)
-        sj_salarys = get_salarys_sj(sj_payload)
-        hh_total_vacancies = hh_response.json()['found']
-        sj_total_vacancies = sj_response.json()['total']
-        sj_info_salarys = create_result(
+            sj_salarys = get_salarys_sj(sj_payload)
+            sj_total_vacancies = sj_response.json()['total']
+            sj_info_salarys = create_result(
             language, sj_total_vacancies, sj_salarys, sj_dict)
-        hh_info_salarys = create_result(
-            language, hh_total_vacancies, hh_salarys, hh_dict)
-    hh_table = create_table(hh_info_salarys, languages, 'headhunter Moscow')
-    sj_table = create_table(sj_info_salarys, languages, 'superjob Moscow')
-    print(hh_table.table)
-    print(sj_table.table)
+    if args.skip_hh:
+        hh_table = create_table(hh_info_salarys, languages, 'headhunter Moscow')
+        print(hh_table.table)
+    if args.skip_sj:
+        sj_table = create_table(sj_info_salarys, languages, 'superjob Moscow')
+        print(sj_table.table)
