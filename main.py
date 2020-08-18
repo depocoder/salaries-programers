@@ -137,8 +137,8 @@ if __name__ == "__main__":
                 language, sj_total_vacancies, sj_salaries, sj_statistic)
     if not args.skip_hh:
         hh_table = create_table(
-            hh_info_salaries, languages, 'headhunter Moscow')
+            hh_info_salaries, languages, 'HeadHunter Moscow')
         print(hh_table.table)
     if not args.skip_sj:
-        sj_table = create_table(sj_info_salaries, languages, 'superjob Moscow')
+        sj_table = create_table(sj_info_salaries, languages, 'SuperJob Moscow')
         print(sj_table.table)
