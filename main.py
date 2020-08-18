@@ -5,28 +5,27 @@ from terminaltables import AsciiTable
 from dotenv import load_dotenv
 
 
+def predict_rub_salary(salary_info, payment_from, payment_to, rub):
+    if salary_info['currency'] != rub:
+        return
+    elif salary_info[payment_from] is None:
+        return salary_info[payment_to]*0.8
+    elif salary_info[payment_to] is None:
+        return salary_info[payment_from]*1.2
+    else:
+        return (salary_info[payment_from] + salary_info[payment_to]) // 2
+
+
 def predict_rub_salary_hh(job_info):
     salary_info = job_info['salary']
-    if salary_info["currency"] != 'RUR':
-        return
-    elif salary_info['from'] is None:
-        return salary_info['to']*0.8
-    elif salary_info['to'] is None:
-        return salary_info['from']*1.2
-    else:
-        return (salary_info['from'] + salary_info['to']) // 2
+    return predict_rub_salary(salary_info, 'from', 'to', 'RUR')
 
 
 def predict_rub_salary_sj(vacancy):
-    if ((not vacancy["payment_from"] and not vacancy["payment_to"])
-       or vacancy["currency"] != 'rub'):
+    if not vacancy["payment_from"] and not vacancy["payment_to"]:
         return
-    elif vacancy['payment_from'] is None:
-        return vacancy['payment_to']*0.8
-    elif vacancy['payment_to'] is None:
-        return vacancy['payment_from']*1.2
-    else:
-        return (vacancy['payment_from'] + vacancy['payment_to']) // 2
+    return predict_rub_salary(
+        vacancy, 'payment_from', 'payment_to', 'rub')
 
 
 def get_salaries_hh(hh_payload, hh_response):
@@ -44,10 +43,11 @@ def get_salaries_hh(hh_payload, hh_response):
 
 def create_table(salaries_stastics, languages, table_title):
     table_heading = [['Язык программирования', 'Вакансий найдено',
-                   'Вакансий обработано', 'Средняя зарплата']]
+                      'Вакансий обработано', 'Средняя зарплата']]
     for language in languages:
         vacancies_found = salaries_stastics[language]['vacancies_found']
-        vacancies_processed = salaries_stastics[language]['vacancies_processed']
+        vacancies_processed = (
+            salaries_stastics[language]['vacancies_processed'])
         average_salary = salaries_stastics[language]['average_salary']
         language_info = [
             language, vacancies_found, vacancies_processed, average_salary]
@@ -61,12 +61,13 @@ def get_salaries_sj(sj_payload):
     salaries = []
     while True:
         sj_payload['page'] = page
+        min_salary = 8000
         sj_response = requests.get(
             sj_url, headers=headers, params=sj_payload)
         for vacancy in sj_response.json()['objects']:
             salary = predict_rub_salary_sj(vacancy)
             if salary:
-                if salary > 8000:
+                if salary > min_salary:
                     salaries.append(int(salary))
             page += 1
         if not sj_response.json()['more']:
@@ -78,7 +79,8 @@ def create_dict_salaries(language, total_vacancies, salaries, dict_name):
     dict_name[language] = {}
     dict_name[language]['vacancies_found'] = total_vacancies
     if len(salaries) != 0:
-        dict_name[language]['average_salary'] = int(sum(salaries)/len(salaries))
+        dict_name[language]['average_salary'] = (
+            int(sum(salaries)/len(salaries)))
     else:
         dict_name[language]['average_salary'] = 0
     dict_name[language]['vacancies_processed'] = len(salaries)
@@ -128,13 +130,14 @@ if __name__ == "__main__":
         if not args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
-            sj_url, headers=headers, params=sj_payload)
+                sj_url, headers=headers, params=sj_payload)
             sj_salaries = get_salaries_sj(sj_payload)
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_dict_salaries(
-            language, sj_total_vacancies, sj_salaries, sj_statistic)
+                language, sj_total_vacancies, sj_salaries, sj_statistic)
     if not args.skip_hh:
-        hh_table = create_table(hh_info_salaries, languages, 'headhunter Moscow')
+        hh_table = create_table(
+            hh_info_salaries, languages, 'headhunter Moscow')
         print(hh_table.table)
     if not args.skip_sj:
         sj_table = create_table(sj_info_salaries, languages, 'superjob Moscow')
