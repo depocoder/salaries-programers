@@ -32,8 +32,10 @@ def get_salaries_hh(hh_payload, hh_response):
     last_page = hh_response.json()['pages']
     salaries = []
     for page_hh in range(last_page + 1):
-        hh_payload['page'] = page_hh
-        response = requests.get(url_hh, params=hh_payload)
+        response = requests.get(url_hh, params={
+            **hh_payload,
+            'page': page_hh
+        })
         for job_info in response.json()['items']:
             salary = predict_rub_salary_hh(job_info)
             if salary:
