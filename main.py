@@ -115,8 +115,8 @@ if __name__ == "__main__":
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
-    sj_dict = {}
-    hh_dict = {}
+    sj_statistic = {}
+    hh_statistics = {}
     for language in languages:
         if args.skip_hh:
             hh_payload['text'] = f"{language} Разработчик"
@@ -124,7 +124,7 @@ if __name__ == "__main__":
             hh_salaries = get_salaries_hh(hh_payload)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_result(
-                language, hh_total_vacancies, hh_salaries, hh_dict)
+                language, hh_total_vacancies, hh_salaries, hh_statistics)
         if args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             sj_salaries = get_salaries_sj(sj_payload)
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_result(
-            language, sj_total_vacancies, sj_salaries, sj_dict)
+            language, sj_total_vacancies, sj_salaries, sj_statistic)
     if args.skip_hh:
         hh_table = create_table(hh_info_salaries, languages, 'headhunter Moscow')
         print(hh_table.table)
