@@ -94,10 +94,10 @@ if __name__ == "__main__":
                         help='''Введите языки программирования
                         по которым хотите узнать среднюю зарплату''')
     parser.add_argument(
-        '--skip_hh', action="store_false",
+        '--skip_hh', action="store_true",
         help='Не делать таблицу hh.')
     parser.add_argument(
-        '--skip_sj', action="store_false",
+        '--skip_sj', action="store_true",
         help='Не делать таблицу sj.')
 
     args = parser.parse_args()
@@ -118,14 +118,14 @@ if __name__ == "__main__":
     sj_statistic = {}
     hh_statistics = {}
     for language in languages:
-        if args.skip_hh:
+        if not args.skip_hh:
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
             hh_salaries = get_salaries_hh(hh_payload)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_result(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
-        if args.skip_sj:
+        if not args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
             sj_url, headers=headers, params=sj_payload)
@@ -133,9 +133,9 @@ if __name__ == "__main__":
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_result(
             language, sj_total_vacancies, sj_salaries, sj_statistic)
-    if args.skip_hh:
+    if not args.skip_hh:
         hh_table = create_table(hh_info_salaries, languages, 'headhunter Moscow')
         print(hh_table.table)
-    if args.skip_sj:
+    if not args.skip_sj:
         sj_table = create_table(sj_info_salaries, languages, 'superjob Moscow')
         print(sj_table.table)
