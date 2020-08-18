@@ -29,17 +29,17 @@ def predict_rub_salary_sj(vacancy):
         return (vacancy['payment_from'] + vacancy['payment_to']) // 2
 
 
-def get_salarys_hh(hh_payload):
+def get_salaries_hh(hh_payload):
     last_page = hh_response.json()['pages']
-    salarys = []
+    salaries = []
     for page_hh in range(last_page + 1):
         hh_payload['page'] = page_hh
         response = requests.get(url_hh, params=hh_payload)
         for job_info in response.json()['items']:
             salary = predict_rub_salary_hh(job_info)
             if salary:
-                salarys.append(int(salary))
-    return salarys
+                salaries.append(int(salary))
+    return salaries
 
 
 def create_table(result, languages, title):
@@ -56,9 +56,9 @@ def create_table(result, languages, title):
     return table
 
 
-def get_salarys_sj(sj_payload):
+def get_salaries_sj(sj_payload):
     page = 0
-    salarys = []
+    salaries = []
     while True:
         sj_payload['page'] = page
         sj_response = requests.get(
@@ -67,21 +67,21 @@ def get_salarys_sj(sj_payload):
             salary = predict_rub_salary_sj(vacancy)
             if salary:
                 if salary > 8000:
-                    salarys.append(int(salary))
+                    salaries.append(int(salary))
             page += 1
         if not sj_response.json()['more']:
             break
-    return salarys
+    return salaries
 
 
-def create_result(language, total_vacancies, salarys, dict):
+def create_result(language, total_vacancies, salaries, dict):
     dict[language] = {}
     dict[language]['vacancies_found'] = total_vacancies
-    if len(salarys) != 0:
-        dict[language]['average_salary'] = int(sum(salarys)/len(salarys))
+    if len(salaries) != 0:
+        dict[language]['average_salary'] = int(sum(salaries)/len(salaries))
     else:
         dict[language]['average_salary'] = 0
-    dict[language]['vacancies_processed'] = len(salarys)
+    dict[language]['vacancies_processed'] = len(salaries)
     return dict
 
 
@@ -121,21 +121,21 @@ if __name__ == "__main__":
         if args.skip_hh:
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
-            hh_salarys = get_salarys_hh(hh_payload)
+            hh_salaries = get_salaries_hh(hh_payload)
             hh_total_vacancies = hh_response.json()['found']
-            hh_info_salarys = create_result(
-                language, hh_total_vacancies, hh_salarys, hh_dict)
+            hh_info_salaries = create_result(
+                language, hh_total_vacancies, hh_salaries, hh_dict)
         if args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
             sj_url, headers=AUTH_TOKEN, params=sj_payload)
-            sj_salarys = get_salarys_sj(sj_payload)
+            sj_salaries = get_salaries_sj(sj_payload)
             sj_total_vacancies = sj_response.json()['total']
-            sj_info_salarys = create_result(
-            language, sj_total_vacancies, sj_salarys, sj_dict)
+            sj_info_salaries = create_result(
+            language, sj_total_vacancies, sj_salaries, sj_dict)
     if args.skip_hh:
-        hh_table = create_table(hh_info_salarys, languages, 'headhunter Moscow')
+        hh_table = create_table(hh_info_salaries, languages, 'headhunter Moscow')
         print(hh_table.table)
     if args.skip_sj:
-        sj_table = create_table(sj_info_salarys, languages, 'superjob Moscow')
+        sj_table = create_table(sj_info_salaries, languages, 'superjob Moscow')
         print(sj_table.table)
