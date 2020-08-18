@@ -29,7 +29,7 @@ def predict_rub_salary_sj(vacancy):
         return (vacancy['payment_from'] + vacancy['payment_to']) // 2
 
 
-def get_salaries_hh(hh_payload):
+def get_salaries_hh(hh_payload, hh_response):
     last_page = hh_response.json()['pages']
     salaries = []
     for page_hh in range(last_page + 1):
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         if not args.skip_hh:
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
-            hh_salaries = get_salaries_hh(hh_payload)
+            hh_salaries = get_salaries_hh(hh_payload, hh_response)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_result(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
