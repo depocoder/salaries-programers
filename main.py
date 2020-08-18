@@ -62,7 +62,7 @@ def get_salaries_sj(sj_payload):
     while True:
         sj_payload['page'] = page
         sj_response = requests.get(
-            sj_url, headers=AUTH_TOKEN, params=sj_payload)
+            sj_url, headers=headers, params=sj_payload)
         for vacancy in sj_response.json()['objects']:
             salary = predict_rub_salary_sj(vacancy)
             if salary:
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     url_hh = "https://api.hh.ru/vacancies"
     load_dotenv()
     sj_token = os.getenv("SJ_TOKEN")
-    AUTH_TOKEN = {'X-Api-App-Id': sj_token}
+    headers = {'X-Api-App-Id': sj_token}
     sj_payload = {'town': 4, 'count': 100}
     hh_payload = {
         "period": 30,
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         if args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
-            sj_url, headers=AUTH_TOKEN, params=sj_payload)
+            sj_url, headers=headers, params=sj_payload)
             sj_salaries = get_salaries_sj(sj_payload)
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_result(
