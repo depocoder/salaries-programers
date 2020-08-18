@@ -1,4 +1,4 @@
-# Check_your_payday
+# salaries-programers
  
 ## Описание проекта.   
 Этот проект позволяет узнать среднюю зарплату программистов в Москве через API: HeadHunter и SuperJob.
