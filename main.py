@@ -62,10 +62,11 @@ def get_salaries_sj(sj_payload):
     page = 0
     salaries = []
     while True:
-        sj_payload['page'] = page
         min_salary = 8000
-        sj_response = requests.get(
-            sj_url, headers=headers, params=sj_payload)
+        sj_response = requests.get(sj_url, headers=headers, params={
+                **sj_payload,
+                'page': page
+                })
         for vacancy in sj_response.json()['objects']:
             salary = predict_rub_salary_sj(vacancy)
             if salary:
