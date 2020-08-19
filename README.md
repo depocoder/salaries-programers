@@ -6,14 +6,24 @@
 ## Пример использования.   
 
 ![](example.gif) 
-## Подготовка к запуску.  
+## Подготовка к запуску.  (Linux or MacOS)
+Уставновить Python 3+.
+```
+sudo apt-get install python3
+```
+Установить, создать и активировать виртуальное окружение.
+```
+pip install virtualenv
+python3 -m venv env
+source env/bin/activate
+```
 Установить библиотеки командой.  
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 Создайте файл .env в него надо прописать ваш SuperJob token в переменную **SJ_TOKEN** его можно получить [**тут**](https://api.superjob.ru/).  
     
-**Пример**        
+**Пример заполнения .env файла**        
 ```
 SJ_TOKEN=v3.r.132760579.d32e4e46e08879a84f59239c248bd044ae5cd92c.9aee469a67de819b18d36a46489e329c118d0d20
 ```
