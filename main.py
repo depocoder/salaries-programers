@@ -78,16 +78,16 @@ def get_salaries_sj(sj_payload):
     return salaries
 
 
-def create_dict_salaries(language, total_vacancies, salaries, dict_name):
-    dict_name[language] = {}
-    dict_name[language]['vacancies_found'] = total_vacancies
+def create_statistics_salaries(language, total_vacancies, salaries, statistics_salaries):
+    statistics_salaries[language] = {}
+    statistics_salaries[language]['vacancies_found'] = total_vacancies
     if len(salaries) != 0:
-        dict_name[language]['average_salary'] = (
+        statistics_salaries[language]['average_salary'] = (
             int(sum(salaries)/len(salaries)))
     else:
-        dict_name[language]['average_salary'] = 0
-    dict_name[language]['vacancies_processed'] = len(salaries)
-    return dict_name
+        statistics_salaries[language]['average_salary'] = 0
+    statistics_salaries[language]['vacancies_processed'] = len(salaries)
+    return statistics_salaries
 
 
 if __name__ == "__main__":
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             hh_response = requests.get(url_hh, params=hh_payload)
             hh_salaries = get_salaries_hh(hh_payload, hh_response)
             hh_total_vacancies = hh_response.json()['found']
-            hh_info_salaries = create_dict_salaries(
+            hh_info_salaries = create_statistics_salaries(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
         if not args.skip_sj:
             sj_payload['keyword'] = f"{language} Разработчик"
@@ -136,7 +136,7 @@ if __name__ == "__main__":
                 sj_url, headers=headers, params=sj_payload)
             sj_salaries = get_salaries_sj(sj_payload)
             sj_total_vacancies = sj_response.json()['total']
-            sj_info_salaries = create_dict_salaries(
+            sj_info_salaries = create_statistics_salaries(
                 language, sj_total_vacancies, sj_salaries, sj_statistic)
     if not args.skip_hh:
         hh_table = create_table(
