@@ -14,16 +14,21 @@ def predict_rub_salary(salary_from, salary_to):
         return (salary_from + salary_to) // 2
 
 
-def get_salaries_hh(hh_period, hh_area, hh_per_page, 
-                    hh_only_with_salary, last_page):
+def get_salaries_hh(last_page, hh_payload, url_hh):
     salaries = []
     for page_hh in range(last_page + 1):
+        hh_period = hh_payload['period']
+        hh_area = hh_payload['area']
+        hh_per_page = hh_payload['per_page']
+        hh_only_with_salary = hh_payload['only_with_salary']
+        language = hh_payload['text']
         response = requests.get(url_hh, params={
-            'period': hh_period,
-            'area': hh_area,
+            "period": hh_period,
+            "area": hh_area,
             'per_page': hh_per_page,
-            'only_with_salary': hh_only_with_salary,
+            "only_with_salary": hh_only_with_salary,
             'page': page_hh,
+            'text': language
         })
         for job_info in response.json()['items']:
             salary_info = job_info['salary']
@@ -72,7 +77,8 @@ def get_salaries_sj(sj_payload):
     return salaries
 
 
-def create_statistics_salaries(language, total_vacancies, salaries, statistics_salaries):
+def create_statistics_salaries(language, total_vacancies,
+                               salaries, statistics_salaries):
     statistics_salaries[language] = {}
     statistics_salaries[language]['vacancies_found'] = total_vacancies
     if len(salaries) != 0:
@@ -114,10 +120,7 @@ if __name__ == "__main__":
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
-    hh_period = hh_payload['period']
-    hh_area = hh_payload['area']
-    hh_per_page = hh_payload['per_page']
-    hh_only_with_salary = hh_payload['only_with_salary']
+
     sj_statistic = {}
     hh_statistics = {}
     for language in languages:
@@ -125,9 +128,7 @@ if __name__ == "__main__":
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
             last_page = hh_response.json()['pages']
-            hh_salaries = get_salaries_hh(
-                hh_period, hh_area, hh_per_page,
-                hh_only_with_salary, last_page)
+            hh_salaries = get_salaries_hh(last_page, hh_payload, url_hh)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_statistics_salaries(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
