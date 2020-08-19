@@ -29,8 +29,8 @@ SJ_TOKEN=v3.r.132760579.d32e4e46e08879a84f59239c248bd044ae5cd92c.9aee469a67de819
 ```
 # Аргументы.
 **prog_language** — Дополнительные языки программирования.   
-**skip_hh** - Не делать таблицу hh.
-**skip_sj** - Не делать таблицу sj.
+**skip_hh** - Не делать таблицу hh.   
+**skip_sj** - Не делать таблицу sj.   
 
 ```
 python3 main.py PHP Pascal
