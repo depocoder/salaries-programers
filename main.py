@@ -5,27 +5,13 @@ from terminaltables import AsciiTable
 from dotenv import load_dotenv
 
 
-def predict_rub_salary(salary_info, payment_from, payment_to, rub):
-    if salary_info['currency'] != rub:
-        return
-    elif salary_info[payment_from] is None:
-        return salary_info[payment_to]*0.8
-    elif salary_info[payment_to] is None:
-        return salary_info[payment_from]*1.2
+def predict_rub_salary(salary_from, salary_to):
+    if salary_from is None:
+        return salary_to*0.8
+    elif salary_to is None:
+        return salary_from*1.2
     else:
-        return (salary_info[payment_from] + salary_info[payment_to]) // 2
-
-
-def predict_rub_salary_hh(job_info):
-    salary_info = job_info['salary']
-    return predict_rub_salary(salary_info, 'from', 'to', 'RUR')
-
-
-def predict_rub_salary_sj(vacancy):
-    if not vacancy["payment_from"] and not vacancy["payment_to"]:
-        return
-    return predict_rub_salary(
-        vacancy, 'payment_from', 'payment_to', 'rub')
+        return (salary_from + salary_to) // 2
 
 
 def get_salaries_hh(hh_payload, hh_response):
@@ -37,8 +23,11 @@ def get_salaries_hh(hh_payload, hh_response):
             'page': page_hh
         })
         for job_info in response.json()['items']:
-            salary = predict_rub_salary_hh(job_info)
-            if salary:
+            salary_info = job_info['salary']
+            if salary_info['currency'] == 'RUR':
+                hh_salary_from = salary_info['from']
+                hh_salary_to = salary_info['to']
+                salary = predict_rub_salary(hh_salary_from, hh_salary_to)
                 salaries.append(int(salary))
     return salaries
 
@@ -68,11 +57,13 @@ def get_salaries_sj(sj_payload):
                 'page': page
                 })
         for vacancy in sj_response.json()['objects']:
-            salary = predict_rub_salary_sj(vacancy)
-            if salary:
+            sj_salary_from = vacancy['payment_from']
+            sj_salary_to = vacancy['payment_to']
+            if vacancy['currency'] == 'rub':
+                salary = predict_rub_salary(sj_salary_from, sj_salary_to)
                 if salary > min_salary:
                     salaries.append(int(salary))
-            page += 1
+                page += 1
         if not sj_response.json()['more']:
             break
     return salaries
