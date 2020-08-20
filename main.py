@@ -3,6 +3,7 @@ import argparse
 import requests
 from terminaltables import AsciiTable
 from dotenv import load_dotenv
+from itertools import count
 
 
 def predict_rub_salary(salary_from, salary_to):
@@ -14,29 +15,28 @@ def predict_rub_salary(salary_from, salary_to):
         return (salary_from + salary_to) // 2
 
 
-def get_salaries_hh(last_page, hh_payload, url_hh):
+def get_salaries_hh():
+    url_hh = "https://api.hh.ru/vacancies"
     salaries = []
-    for page_hh in range(last_page + 1):
-        hh_period = hh_payload['period']
-        hh_area = hh_payload['area']
-        hh_per_page = hh_payload['per_page']
-        hh_only_with_salary = hh_payload['only_with_salary']
-        language = hh_payload['text']
-        response = requests.get(url_hh, params={
-            "period": hh_period,
-            "area": hh_area,
-            'per_page': hh_per_page,
-            "only_with_salary": hh_only_with_salary,
-            'page': page_hh,
-            'text': language
-        })
-        for job_info in response.json()['items']:
+    params = {
+        "period": 30,
+        "area": "1",
+        'per_page': 100,
+        "only_with_salary": True,
+        'text': f'{language} Разработчик'}
+    for page_hh in count(0):
+        params['page'] = page_hh
+        response = requests.get(url_hh, params=params)
+        decoded_response = response.json()
+        for job_info in decoded_response['items']:
             salary_info = job_info['salary']
             if salary_info['currency'] == 'RUR':
                 hh_salary_from = salary_info['from']
                 hh_salary_to = salary_info['to']
                 salary = predict_rub_salary(hh_salary_from, hh_salary_to)
                 salaries.append(int(salary))
+        if page_hh >= decoded_response.get('pages'):
+            break
     return salaries
 
 
@@ -121,7 +121,6 @@ if __name__ == "__main__":
         "area": "1",
         'per_page': 100,
         "only_with_salary": True}
-
     sj_statistic = {}
     hh_statistics = {}
     for language in languages:
@@ -129,7 +128,7 @@ if __name__ == "__main__":
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
             last_page = hh_response.json()['pages']
-            hh_salaries = get_salaries_hh(last_page, hh_payload, url_hh)
+            hh_salaries = get_salaries_hh(language, url_hh, hh_payload)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_statistics_salaries(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
