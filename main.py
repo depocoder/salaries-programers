@@ -37,7 +37,8 @@ def get_salaries_hh(language):
                 salaries.append(int(salary))
         if page_hh >= decoded_response['pages']:
             break
-    return salaries
+    hh_total_vacancies = decoded_response['found']
+    return hh_total_vacancies, salaries
 
 
 def create_table(salaries_stastics, languages, table_title):
@@ -55,8 +56,10 @@ def create_table(salaries_stastics, languages, table_title):
     return table
 
 
-def get_salaries_sj(language, headers):
+def get_salaries_sj(language):
+    headers = {'X-Api-App-Id': sj_token}
     params = {'town': 4, 'count': 100}
+    params['keyword'] = f"{language} Разработчик"
     salaries = []
     url = "https://api.superjob.ru/2.0/vacancies/"
     for page in count(0):
@@ -75,7 +78,8 @@ def get_salaries_sj(language, headers):
                 page += 1
         if not sj_json_vacancies['more']:
             break
-    return salaries
+    sj_total_vacancies = sj_json_vacancies['total']
+    return sj_total_vacancies, salaries
 
 
 def create_statistics_salaries(language, total_vacancies,
@@ -110,33 +114,18 @@ if __name__ == "__main__":
     languages = ['Python', 'Java', 'Javascript',
                  'Ruby', 'C++', 'C#', 'C', 'Go']
     languages += args.prog_language
-    sj_url = "https://api.superjob.ru/2.0/vacancies/"
-    url_hh = "https://api.hh.ru/vacancies"
     load_dotenv()
     sj_token = os.getenv("SJ_TOKEN")
-    headers = {'X-Api-App-Id': sj_token}
     sj_payload = {'town': 4, 'count': 100}
-    hh_payload = {
-        "period": 30,
-        "area": "1",
-        'per_page': 100,
-        "only_with_salary": True}
     sj_statistic = {}
     hh_statistics = {}
     for language in languages:
         if not args.skip_hh:
-            hh_payload['text'] = f"{language} Разработчик"
-            hh_response = requests.get(url_hh, params=hh_payload)
-            hh_salaries = get_salaries_hh(language)
-            hh_total_vacancies = hh_response.json()['found']
+            hh_total_vacancies, hh_salaries = get_salaries_hh(language)
             hh_info_salaries = create_statistics_salaries(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
         if not args.skip_sj:
-            sj_payload['keyword'] = f"{language} Разработчик"
-            sj_response = requests.get(
-                sj_url, headers=headers, params=sj_payload)
-            sj_salaries = get_salaries_sj(language, headers)
-            sj_total_vacancies = sj_response.json()['total']
+            sj_total_vacancies, sj_salaries = get_salaries_sj(language)
             sj_info_salaries = create_statistics_salaries(
                 language, sj_total_vacancies, sj_salaries, sj_statistic)
     if not args.skip_hh:
