@@ -55,7 +55,7 @@ def create_table(salaries_stastics, languages, table_title):
     return table
 
 
-def get_salaries_sj(language):
+def get_salaries_sj(language, headers):
     params = {'town': 4, 'count': 100}
     salaries = []
     url = "https://api.superjob.ru/2.0/vacancies/"
@@ -135,7 +135,7 @@ if __name__ == "__main__":
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
                 sj_url, headers=headers, params=sj_payload)
-            sj_salaries = get_salaries_sj(language)
+            sj_salaries = get_salaries_sj(language, headers)
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_statistics_salaries(
                 language, sj_total_vacancies, sj_salaries, sj_statistic)
