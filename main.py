@@ -15,7 +15,7 @@ def predict_rub_salary(salary_from, salary_to):
         return (salary_from + salary_to) // 2
 
 
-def get_salaries_hh():
+def get_salaries_hh(language):
     url = "https://api.hh.ru/vacancies"
     salaries = []
     params = {
@@ -55,15 +55,15 @@ def create_table(salaries_stastics, languages, table_title):
     return table
 
 
-def get_salaries_sj(sj_payload):
-    page = 0
+def get_salaries_sj(language):
+    params = {'town': 4, 'count': 100}
     salaries = []
-    while True:
+    url = "https://api.superjob.ru/2.0/vacancies/"
+    for page in count(0):
+        params['page'] = page
+        params['keyword'] = f"{language} Разработчик"
         min_salary = 8000
-        sj_response = requests.get(sj_url, headers=headers, params={
-                **sj_payload,
-                'page': page
-                })
+        sj_response = requests.get(url, headers=headers, params=params)
         sj_json_vacancies = sj_response.json()
         for vacancy in sj_json_vacancies['objects']:
             sj_salary_from = vacancy['payment_from']
@@ -128,7 +128,7 @@ if __name__ == "__main__":
             hh_payload['text'] = f"{language} Разработчик"
             hh_response = requests.get(url_hh, params=hh_payload)
             last_page = hh_response.json()['pages']
-            hh_salaries = get_salaries_hh()
+            hh_salaries = get_salaries_hh(language)
             hh_total_vacancies = hh_response.json()['found']
             hh_info_salaries = create_statistics_salaries(
                 language, hh_total_vacancies, hh_salaries, hh_statistics)
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             sj_payload['keyword'] = f"{language} Разработчик"
             sj_response = requests.get(
                 sj_url, headers=headers, params=sj_payload)
-            sj_salaries = get_salaries_sj(sj_payload)
+            sj_salaries = get_salaries_sj(language)
             sj_total_vacancies = sj_response.json()['total']
             sj_info_salaries = create_statistics_salaries(
                 language, sj_total_vacancies, sj_salaries, sj_statistic)
