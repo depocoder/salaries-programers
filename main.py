@@ -64,7 +64,8 @@ def get_salaries_sj(sj_payload):
                 **sj_payload,
                 'page': page
                 })
-        for vacancy in sj_response.json()['objects']:
+        sj_json_vacancies = sj_response.json()
+        for vacancy in sj_json_vacancies['objects']:
             sj_salary_from = vacancy['payment_from']
             sj_salary_to = vacancy['payment_to']
             if vacancy['currency'] == 'rub':
@@ -72,7 +73,7 @@ def get_salaries_sj(sj_payload):
                 if salary > min_salary:
                     salaries.append(int(salary))
                 page += 1
-        if not sj_response.json()['more']:
+        if not sj_json_vacancies['more']:
             break
     return salaries
 
